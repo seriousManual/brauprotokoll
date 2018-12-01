@@ -45,7 +45,8 @@ export default function reducer(state=[], action) {
 
       const duration = action.duration || sw.duration;
       const elapsedSinceStart = moment().diff(sw.startTime);
-      const timeLeft = duration - elapsedSinceStart;
+      let timeLeft = duration - elapsedSinceStart;
+      timeLeft = Math.round(timeLeft / 1000) * 1000;
 
       return {
         ...sw,
