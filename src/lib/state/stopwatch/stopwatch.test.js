@@ -4,7 +4,7 @@ import ms from 'ms';
 import stopwatchReducer, {
   createStopwatchAddAction, createStopwatchStartAction, createStopwatchUpdateAction,
   SW_STATE_ACTIVE, SW_STATE_DONE, SW_STATE_PENDING
-} from '../stopwatch';
+} from './data';
 
 const regexpUUID = /[a-f0-9]+\-[a-f0-9]+\-[a-f0-9]+\-[a-f0-9]+\-[a-f0-9]+/;
 
@@ -79,7 +79,7 @@ describe('stopwatch', () => {
 
     afterEach(() => clock.restore());
 
-    it('should update a stopwatch in between', () => {
+    it('should update a stopwatch in between, no duration or payload', () => {
       const id = 'myId';
       const action = createStopwatchUpdateAction(id);
       const state = [{
@@ -100,6 +100,30 @@ describe('stopwatch', () => {
         startTime: '1970-01-01T00:00:00.000Z',
         payload: {my: 'payload'},
         timeLeft: '9m 50s'
+      }]);
+    });
+
+    it('should update a stopwatch in between, duration and payload', () => {
+      const id = 'myId';
+      const action = createStopwatchUpdateAction(id, ms('11m'), {more: 'payload'});
+      const state = [{
+        id,
+        state: SW_STATE_ACTIVE,
+        startTime: '1970-01-01T00:00:00.000Z',
+        timeLeft: null,
+        payload: {my: 'payload'},
+        duration: ms('10m')
+      }];
+  
+      const newState = stopwatchReducer(state, action);
+
+      expect(newState).toEqual([{
+        id,
+        state: SW_STATE_ACTIVE,
+        duration: ms('11m'),
+        startTime: '1970-01-01T00:00:00.000Z',
+        payload: {more: 'payload'},
+        timeLeft: '10m 50s'
       }]);
     });
 

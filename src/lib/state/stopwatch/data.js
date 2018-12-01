@@ -18,8 +18,8 @@ export function createStopwatchStartAction(id) {
   return {type: STOPWATCH_START, id};
 }
 
-export function createStopwatchUpdateAction(id) {
-  return {type: STOPWATCH_UPDATE, id};
+export function createStopwatchUpdateAction(id, duration=null, payload=null) {
+  return {type: STOPWATCH_UPDATE, id, payload, duration};
 }
 
 export default function reducer(state=[], action) {
@@ -43,13 +43,16 @@ export default function reducer(state=[], action) {
     return state.map(sw => {
       if (sw.id !== action.id) return sw;
 
+      const duration = action.duration || sw.duration;
       const elapsedSinceStart = moment().diff(sw.startTime);
-      const timeLeft = sw.duration - elapsedSinceStart;
+      const timeLeft = duration - elapsedSinceStart;
 
       return {
         ...sw,
         state: timeLeft <= 0 ? SW_STATE_DONE : SW_STATE_ACTIVE,
-        timeLeft: prettyMs(timeLeft)
+        timeLeft: prettyMs(timeLeft),
+        payload: action.payload || sw.payload,
+        duration
       };
     });
   }
