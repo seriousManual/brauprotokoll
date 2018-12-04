@@ -9,6 +9,7 @@ import reducer from './lib/state/reducer';
 import saga from './lib/state/saga';
 
 import Stopwatches from './lib/components/Stopwatches';
+import Pits from './lib/components/Pits';
 
 const sagaMiddleware = createSagaMiddleware()
 const store = createStore(reducer, applyMiddleware(sagaMiddleware));
@@ -20,6 +21,9 @@ store.subscribe(foo => {
 
 ReactDOM.render((
   <Provider store={store}>
-    <Stopwatches />
+    <React.Fragment>
+      <Stopwatches />
+      <Pits />
+    </React.Fragment>
   </Provider>
 ), document.getElementById('root'));
