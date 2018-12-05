@@ -16,5 +16,5 @@ function Stopwatches({sw, dispatch}) {
 }
 
 export default connect(state => {
-  return {sw: state.sw}
+  return {sw: state.protocol.rests}
 })(Stopwatches);

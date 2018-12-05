@@ -1,17 +1,20 @@
 import React from 'react';
 import {connect} from 'react-redux';
 
-import {createPitSetAction} from '../state/pit/data';
+import {createPitSetAction, createPitAddAction} from '../state/protocol/data';
 
-function Pit({id, pointInTime, dispatch}) {
+function Pit({pointInTime, payload, onActivate, onSet}) {
   return <div>
-    {pointInTime} - 
-    <button onClick={() => dispatch(createPitSetAction(id))}>
-      set
-    </button>
+    {pointInTime} - {payload}
+    {payload ? <button onClick={() => onSet()}>set</button> : null}
+    {!payload ? <button onClick={() => onActivate()}>activate</button> : null}
   </div>;
 }
 
-export default connect((state, props) => {
-  return state.pits.find(pit => pit.id === props.id)
-})(Pit);
+export default connect(
+  (state, ownProps) => state.protocol[ownProps.ident] || {},
+  (dispatch, ownProps) => ({
+    onSet: () => dispatch(createPitSetAction(ownProps.ident)),
+    onActivate: () => dispatch(createPitAddAction(ownProps.ident, 'foo'))
+  })
+)(Pit)
