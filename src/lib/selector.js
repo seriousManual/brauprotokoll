@@ -7,9 +7,7 @@ export function getPit(state, ident) {
 }
 
 export function getPitPrefixed(state, prefix) {
-  return state.pits.filter(pit => {
-    return pit.ident.startsWith(prefix);
-  });
+  return state.pits.filter(pit => pit.ident.startsWith(prefix));
 }
 
 export function getAppMode(state) {

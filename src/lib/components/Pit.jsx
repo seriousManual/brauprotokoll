@@ -15,7 +15,8 @@ function Pit({appMode, ident, activated, clearance, pointInTime, payload, onActi
     }
 
     return <div>
-      {clearance ? 'CLEAR' : 'NOT CLEAR'}
+      {ident} - 
+      {clearance ? 'CLEAR' : 'NOT CLEAR'} - 
       {pointInTime || null}
       
       {clearance && !pointInTime ? <button onClick={onSet}>set</button> : null}
