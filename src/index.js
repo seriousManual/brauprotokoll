@@ -8,8 +8,9 @@ import createSagaMiddleware from 'redux-saga'
 import reducer from './lib/state/reducer';
 import saga from './lib/state/saga';
 
-import Stopwatches from './lib/components/Stopwatches';
-import Pit from './lib/components/Pit';
+import App from './lib/components/App';
+
+import { createPitAddAction } from './lib/state/pit/data';
 
 const sagaMiddleware = createSagaMiddleware()
 const store = createStore(reducer, applyMiddleware(sagaMiddleware));
@@ -19,13 +20,13 @@ store.subscribe(foo => {
   console.log(store.getState())
 })
 
+store.dispatch(createPitAddAction('mashIn', {}))
+store.dispatch(createPitAddAction('mashOut', {}))
+store.dispatch(createPitAddAction('beerIn', {}))
+store.dispatch(createPitAddAction('beerOut', {}))
+
 ReactDOM.render((
   <Provider store={store}>
-    <React.Fragment>
-      <Pit ident="mashIn" />
-      <Pit ident="beerIn" />
-      <Pit ident="bearIn" />
-      <Stopwatches />
-    </React.Fragment>
+    <App />
   </Provider>
 ), document.getElementById('root'));
