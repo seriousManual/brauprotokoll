@@ -1,5 +1,5 @@
 const defaultState = {
-  rests: []
+  pitList: []
 };
 
 export default function reducer(state=defaultState, action) {
