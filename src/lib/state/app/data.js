@@ -7,6 +7,9 @@ export function createSetModeAction(mode) {
   return {type: APP_SET_MODE, mode};
 }
 
+// Celsius vs Fahrenheit
+// gr vs lbs
+
 const defaultState = {
   mode: APP_MODE_EDIT
 };

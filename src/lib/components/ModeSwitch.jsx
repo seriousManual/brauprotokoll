@@ -2,6 +2,7 @@ import React from 'react';
 import {connect} from 'react-redux';
 
 import {createSetModeAction, APP_MODE_EDIT, APP_MODE_BREW} from '../state/app/data';
+import {getAppMode} from '../selector';
 
 function ModeSwitch ({dispatch, mode}) {
   function handleChange(e) {
@@ -15,4 +16,6 @@ function ModeSwitch ({dispatch, mode}) {
   )
 }
 
-export default connect(state => state.app)(ModeSwitch)
+export default connect(state => {
+  return {mode: getAppMode(state)}
+})(ModeSwitch)

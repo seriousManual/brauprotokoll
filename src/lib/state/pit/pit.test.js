@@ -2,7 +2,8 @@ import sinon from 'sinon';
 
 import pitReducer, {
   createPitAddAction, createPitSetAction, 
-  createPitActivationAction, createPitClearanceAction
+  createPitActivationAction, createPitClearanceAction,
+  createPitPayloadAction, createPitRemoveAction
 } from './data';
 
 describe('pit', () => {
@@ -30,6 +31,22 @@ describe('pit', () => {
           ident,
           payload: { my: 'payload' },
           activated: false,
+          clearance: false,
+          pointInTime: null
+        }]);
+      });
+
+      it('should create a pit which is already activated', () => {
+        const ident = 'myIdent';
+        const action = createPitAddAction(ident, { my: 'payload' }, true);
+        const state = undefined;
+
+        const newState = pitReducer(state, action);
+
+        expect(newState).toEqual([{
+          ident,
+          payload: { my: 'payload' },
+          activated: true,
           clearance: false,
           pointInTime: null
         }]);
@@ -141,6 +158,37 @@ describe('pit', () => {
         const newState = pitReducer(state, action);
 
         expect(newState).toEqual([{...entry1, clearance: true}, entry2]);
+      });
+    });
+
+    describe('pit payload update', () => {
+      it('should set a pit', () => {
+        const ident = 'myIdent';
+        const entry1 = {
+          ident,
+          payload: {my: 'payload'},
+          activated: false,
+          clearance: false,
+          pointInTime: null
+        };
+
+        const action = createPitPayloadAction(ident, {foo: 'bar'});
+        const state = [entry1];
+
+        const newState = pitReducer(state, action);
+
+        expect(newState).toEqual([{...entry1, payload: {foo: 'bar', my: 'payload'}}]);
+      });
+    });
+
+    describe('pit remove', () => {
+      it('should remove a pit', () => {
+        const action = createPitRemoveAction('b');
+        const state = [{ident: 'a'}, {ident: 'b'}, {ident: 'c'}];
+
+        const newState = pitReducer(state, action);
+
+        expect(newState).toEqual([{ident: 'a'}, {ident: 'c'}]);
       });
     });
   });

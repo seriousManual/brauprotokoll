@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom';
 import { createStore, applyMiddleware } from 'redux';
 import { Provider } from 'react-redux';
 import createSagaMiddleware from 'redux-saga'
+import ms from 'ms';
 
 import reducer from './lib/state/reducer';
 import saga from './lib/state/saga';
@@ -11,27 +12,28 @@ import saga from './lib/state/saga';
 import App from './lib/components/App';
 
 import { createPitAddAction } from './lib/state/pit/data';
-import {createAddPitToListAction} from './lib/state/protocol/data';
+import {createStopwatchAddAction} from './lib/state/stopwatch/data';
+
+let preexistingState = localStorage.getItem('berthold');
+if (preexistingState) {
+  preexistingState = JSON.parse(preexistingState);
+}
 
 const sagaMiddleware = createSagaMiddleware()
-const store = createStore(reducer, applyMiddleware(sagaMiddleware));
+const store = createStore(reducer, preexistingState || {}, applyMiddleware(sagaMiddleware));
 sagaMiddleware.run(saga);
 
-store.subscribe(foo => {
-  console.log(store.getState())
-})
+store.subscribe(() => {
+  localStorage.setItem('berthold', JSON.stringify(store.getState()));
+});
 
-store.dispatch(createPitAddAction('mashIn', {}))
-store.dispatch(createPitAddAction('mashOut', {}))
-store.dispatch(createPitAddAction('beerIn', {}))
-store.dispatch(createPitAddAction('beerOut', {}))
+if (!preexistingState) {
+  store.dispatch(createPitAddAction('mashIn', {temp: 50}))
+  store.dispatch(createPitAddAction('mashOut', {temp: 78}))
 
-store.dispatch(createPitAddAction('foo1', {}))
-store.dispatch(createAddPitToListAction('foo1', {}))
-store.dispatch(createPitAddAction('foo2', {}))
-store.dispatch(createAddPitToListAction('foo2', {}))
-store.dispatch(createPitAddAction('foo3', {}))
-store.dispatch(createAddPitToListAction('foo3', {}))
+  store.dispatch(createStopwatchAddAction('lauterRest', ms('15m'), {}));
+  store.dispatch(createStopwatchAddAction('iso', ms('10m'), {}));
+}
 
 ReactDOM.render((
   <Provider store={store}>

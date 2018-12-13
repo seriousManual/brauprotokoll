@@ -5,14 +5,14 @@ import { delay } from 'redux-saga';
 import { call, put, select } from 'redux-saga/effects';
 
 import stopwatchReducer, {
-  createStopwatchAddAction, createStopwatchStartAction, createStopwatchUpdateAction,
+  createStopwatchAddAction, createStopwatchStartAction,
+  createStopwatchTickAction, createStopwatchRemoveAction, createStopwatchActivationAction,
+  createStopwatchClearanceAction, createStopwatchPayloadAction,
   SW_STATE_ACTIVE, SW_STATE_DONE, SW_STATE_PENDING
 } from './data';
 
 import { sagaStopwatchStart, createSagaStopwatchStartAction } from './saga'
 import { getSW } from '../../selector';
-
-const regexpUUID = /[a-f0-9]+\-[a-f0-9]+\-[a-f0-9]+\-[a-f0-9]+\-[a-f0-9]+/;
 
 describe('stopwatch', () => {
   describe('saga', () => {
@@ -29,7 +29,7 @@ describe('stopwatch', () => {
 
       expect(putStartAction).toEqual(put(createStopwatchStartAction(123)));
       expect(selectSW1).toEqual(select(getSW, 123));
-      expect(putSWUpdate1).toEqual(put(createStopwatchUpdateAction(123)));
+      expect(putSWUpdate1).toEqual(put(createStopwatchTickAction(123)));
       expect(delay1).toEqual(call(delay, 1000));
 
       expect(selectSW2).toEqual(select(getSW, 123));
@@ -51,13 +51,16 @@ describe('stopwatch', () => {
 
     describe('add stopwatch', () => {
       it('should create a stopwatch', () => {
-        const action = createStopwatchAddAction(ms('3s'), { my: 'payload' });
+        const ident = 'myIdent';
+        const action = createStopwatchAddAction(ident, ms('3s'), { my: 'payload' });
         const state = undefined;
 
         const newState = stopwatchReducer(state, action);
 
         expect(newState).toEqual([{
-          id: expect.stringMatching(regexpUUID),
+          ident,
+          activated: false,
+          clearance: false,
           state: 'SW:PENDING',
           startTime: null,
           timeLeft: null,
@@ -76,10 +79,12 @@ describe('stopwatch', () => {
       afterAll(() => clock.restore());
 
       it('should start a stopwatch', () => {
-        const id = 'myId';
-        const action = createStopwatchStartAction(id);
+        const ident = 'myident';
+        const action = createStopwatchStartAction(ident);
         const state = [{
-          id,
+          ident,
+          activated: false,
+          clearance: false,
           state: SW_STATE_PENDING,
           startTime: null,
           timeLeft: null,
@@ -90,7 +95,9 @@ describe('stopwatch', () => {
         const newState = stopwatchReducer(state, action);
 
         expect(newState).toEqual([{
-          id,
+          ident,
+          activated: false,
+          clearance: false,
           state: SW_STATE_ACTIVE,
           duration: ms('3s'),
           startTime: '1970-01-01T00:00:00.000Z',
@@ -100,7 +107,7 @@ describe('stopwatch', () => {
       });
     });
 
-    describe('update stopwatch', () => {
+    describe('tick stopwatch', () => {
       let clock = null;
       beforeEach(() => {
         clock = sinon.useFakeTimers(ms('10s'));
@@ -109,10 +116,10 @@ describe('stopwatch', () => {
       afterEach(() => clock.restore());
 
       it('should update a stopwatch in between, no duration or payload', () => {
-        const id = 'myId';
-        const action = createStopwatchUpdateAction(id);
+        const ident = 'myident';
+        const action = createStopwatchTickAction(ident);
         const state = [{
-          id,
+          ident,
           state: SW_STATE_ACTIVE,
           startTime: '1970-01-01T00:00:00.000Z',
           timeLeft: null,
@@ -123,7 +130,7 @@ describe('stopwatch', () => {
         const newState = stopwatchReducer(state, action);
 
         expect(newState).toEqual([{
-          id,
+          ident,
           state: SW_STATE_ACTIVE,
           duration: ms('10m'),
           startTime: '1970-01-01T00:00:00.000Z',
@@ -133,10 +140,10 @@ describe('stopwatch', () => {
       });
 
       it('should update a stopwatch in between, duration and payload', () => {
-        const id = 'myId';
-        const action = createStopwatchUpdateAction(id, ms('11m'), { more: 'payload' });
+        const ident = 'myident';
+        const action = createStopwatchTickAction(ident);
         const state = [{
-          id,
+          ident,
           state: SW_STATE_ACTIVE,
           startTime: '1970-01-01T00:00:00.000Z',
           timeLeft: null,
@@ -147,20 +154,20 @@ describe('stopwatch', () => {
         const newState = stopwatchReducer(state, action);
 
         expect(newState).toEqual([{
-          id,
+          ident,
           state: SW_STATE_ACTIVE,
-          duration: ms('11m'),
+          duration: ms('10m'),
           startTime: '1970-01-01T00:00:00.000Z',
-          payload: { more: 'payload' },
-          timeLeft: '10m 50s'
+          payload: { my: 'payload' },
+          timeLeft: '9m 50s'
         }]);
       });
 
       it('should update a stopwatch thats done', () => {
-        const id = 'myId';
-        const action = createStopwatchUpdateAction(id);
+        const ident = 'myident';
+        const action = createStopwatchTickAction(ident);
         const state = [{
-          id,
+          ident,
           state: SW_STATE_ACTIVE,
           startTime: '1970-01-01T00:00:00.000Z',
           timeLeft: null,
@@ -171,13 +178,78 @@ describe('stopwatch', () => {
         const newState = stopwatchReducer(state, action);
 
         expect(newState).toEqual([{
-          id,
+          ident,
           state: SW_STATE_DONE,
           duration: ms('10s'),
           startTime: '1970-01-01T00:00:00.000Z',
           payload: { my: 'payload' },
           timeLeft: '0ms'
         }]);
+      });
+    });
+
+    describe('activate action', () => {
+      it('should activate a stopwatch', () => {
+        const ident = 'myident';
+        const action = createStopwatchActivationAction(ident, true);
+        const state = [{
+          ident,
+          activated: false
+        }];
+
+        const newState = stopwatchReducer(state, action);
+
+        expect(newState).toEqual([{
+          ident,
+          activated: true
+        }]);
+      });
+    });
+
+    describe('clearance action', () => {
+      it('should clear a stopwatch', () => {
+        const ident = 'myident';
+        const action = createStopwatchClearanceAction(ident, true);
+        const state = [{
+          ident,
+          clearance: false
+        }];
+
+        const newState = stopwatchReducer(state, action);
+
+        expect(newState).toEqual([{
+          ident,
+          clearance: true
+        }]);
+      });
+    });
+
+    describe('payload action', () => {
+      it('should merge the payload', () => {
+        const ident = 'myident';
+        const action = createStopwatchPayloadAction(ident, {foo: 'bar'});
+        const state = [{
+          ident,
+          payload: {my: 'payload'}
+        }];
+
+        const newState = stopwatchReducer(state, action);
+
+        expect(newState).toEqual([{
+          ident,
+          payload: {my: 'payload', foo: 'bar'}
+        }]);
+      });
+    });
+
+    describe('remove action', () => {
+      it('should remove a stopwatch', () => {
+        const action = createStopwatchRemoveAction('bar');
+        const state = [{ident: 'foo'}, {ident: 'bar'}, {ident: 'bax'}];
+
+        const newState = stopwatchReducer(state, action);
+
+        expect(newState).toEqual([{ident: 'foo'}, {ident: 'bax'}]);
       });
     });
   });

@@ -4,17 +4,22 @@ import {connect} from 'react-redux';
 import {createStopwatchAddAction} from '../state/stopwatch/data';
 
 import Stopwatch from './Stopwatch';
+import {getSWPrefixed} from '../selector';
 
-function Stopwatches({sw, dispatch}) {
+function Stopwatches({sw, title, prefix, dispatch}) {
+  function create() {
+    const ident = prefix + Math.random();
+    dispatch(createStopwatchAddAction(ident, 5000, {}))
+  }
+
   return (
     <div>
-      <h1>stopwatches</h1>
-      <button onClick={() => dispatch(createStopwatchAddAction(5000, {}))}>add</button>
-      {sw.map(sw => <Stopwatch key={sw.id} id={sw.id} />)}
+      <button onClick={create}>add</button>
+      {sw.map(sw => <Stopwatch key={sw.ident} ident={sw.ident} />)}
     </div>
   );
 }
 
-export default connect(state => {
-  return {sw: state.protocol.rests}
+export default connect((state, ownProps) => {
+  return {sw: getSWPrefixed(state, ownProps.prefix)}
 })(Stopwatches);

@@ -1,55 +1,69 @@
 const PIT_ADD = 'PIT:ADD';
 const PIT_SET = 'PIT:SET';
-const PIT_ACTIVATION = 'PIT:ACTIVATION';
-const PIT_CLEARANCE = 'PIT:CLEARANCE';
+const PIT_UPDATE = 'PIT:UPDATE';
+const PIT_UPDATE_PAYLOAD = 'PIT:UPDATE:PAYLOAD';
+const PIT_REMOVE = 'PIT:REMOVE';
 
-export function createPitAddAction(ident, payload) {
-  return {type: PIT_ADD, ident, payload};
+export function createPitAddAction(ident, payload, activated) {
+  return { type: PIT_ADD, ident, payload, activated };
 }
 
 export function createPitSetAction(ident) {
-  return {type: PIT_SET, ident};
+  return { type: PIT_SET, ident };
 }
 
-export function createPitActivationAction(ident, flag) {
-  return {type: PIT_ACTIVATION, ident, flag};
+export function createPitActivationAction(ident, activated) {
+  return { type: PIT_UPDATE, ident, payload: { activated } };
 }
 
-export function createPitClearanceAction(ident, flag) {
-  return {type: PIT_CLEARANCE, ident, flag};
+export function createPitClearanceAction(ident, clearance) {
+  return { type: PIT_UPDATE, ident, payload: { clearance } };
 }
 
-export default function reducer(state=[], action) {
+export function createPitPayloadAction(ident, payload) {
+  return { type: PIT_UPDATE_PAYLOAD, ident, payload: { payload } };
+}
+
+export function createPitRemoveAction(ident) {
+  return { type: PIT_REMOVE, ident };
+}
+
+export default function reducer(state = [], action) {
   if (action.type === PIT_ADD) {
-    return state.concat([createPit(action.ident, action.payload)]);
+    return state.concat([createPit(action.ident, action.payload, action.activated)]);
   }
 
   if (action.type === PIT_SET) {
     return _handlePitForIdent(state, action.ident, pit => {
-      return {...pit, pointInTime: (new Date()).toISOString()}
+      return { ...pit, pointInTime: (new Date()).toISOString() }
     });
   }
 
-  if (action.type === PIT_ACTIVATION) {
+  if (action.type === PIT_UPDATE) {
     return _handlePitForIdent(state, action.ident, pit => {
-      return {...pit, activated: action.flag}
+      return { ...pit, ...action.payload };
     });
   }
 
-  if (action.type === PIT_CLEARANCE) {
+  if (action.type === PIT_UPDATE_PAYLOAD) {
     return _handlePitForIdent(state, action.ident, pit => {
-      return {...pit, clearance: action.flag}
+      const currentPayload = pit.payload;
+      return { ...pit, payload: {...currentPayload, ...action.payload.payload } };
     });
+  }
+
+  if (action.type === PIT_REMOVE) {
+    return state.filter(pit => pit.ident !== action.ident);
   }
 
   return state;
 }
 
-function createPit(ident, payload) {
+function createPit(ident, payload, activated=false) {
   return {
     ident,
     payload,
-    activated: false,
+    activated,
     clearance: false,
     pointInTime: null
   };

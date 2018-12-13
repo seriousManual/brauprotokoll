@@ -1,5 +1,9 @@
-export function getSW(state, id) {
-  return state.protocol.rests.find(sw => sw.id === id);
+export function getSW(state, ident) {
+  return state.sw.find(sw => sw.ident === ident);
+}
+
+export function getSWPrefixed(state, prefix) {
+  return state.sw.filter(sw => sw.ident.startsWith(prefix));
 }
 
 export function getPit(state, ident) {
